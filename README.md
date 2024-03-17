@@ -2,13 +2,13 @@
 # Anchor Build fixer
 
 ![](assets/pexels-tara-winstead-7722845.jpg)
+(*[Tara Winstead - Pexels](https://www.pexels.com/@tara-winstead/)*)
 
-## Table of Content
+--------
 
 <!-- TOC -->
 
 - [Anchor Build fixer](#anchor-build-fixer)
-	- [Table of Content](#table-of-content)
 	- [Introduction](#introduction)
 	- [Current versions](#current-versions)
 	- [Installation](#installation)
