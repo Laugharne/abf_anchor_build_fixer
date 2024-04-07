@@ -42,7 +42,7 @@ I actually build **Anchor projects** with the following versions:
 ## Installation
 
 ### bash
-`cat abf.sh >> ~/.bashrc` or `cat abf.sh >> ~/.bash_function`
+`cat abf.sh >> ~/.bashrc` or `cat abf.sh >> ~/.bash_functions`
 
 ### zsh
 `cat alias.sh >> ~/.zshrc`
@@ -54,6 +54,7 @@ I actually build **Anchor projects** with the following versions:
 - [anchor build isn't working properly - Solana Stack Exchange](https://solana.stackexchange.com/questions/2770/anchor-build-isnt-working-properly)
 - [solana - Anchor build failure - Stack Overflow](https://stackoverflow.com/questions/73360283/anchor-build-failure)
 - [anchor build failed - Solana Stack Exchange](https://solana.stackexchange.com/questions/6853/anchor-build-failed)
+- [cargo - Anchor Build Depenedency error - Solana Stack Exchange](https://solana.stackexchange.com/questions/670/anchor-build-depenedency-error?rq=1)
 ----
 - [bash - Replace one substring for another string in shell script - Stack Overflow](https://stackoverflow.com/questions/13210880/replace-one-substring-for-another-string-in-shell-script)
 - [Bash Reference Manual](https://www.gnu.org/software/bash/manual/bash.html#Shell-Parameter-Expansion)
