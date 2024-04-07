@@ -3,16 +3,17 @@
 # ABF: Anchor Build Fixer
 # -----------------------
 
+
 # Function to display error and fix command
 function __abf_display_cmd() {
 	# Define color codes for error and fix command
-	local RED='\033[0;31m'
-	local GREEN='\033[1;32m'
-	local NO_COLOR='\033[0m'
+	RED='\033[0;31m'
+	GREEN='\033[1;32m'
+	NO_COLOR='\033[0m'
 
-	# Assign function parameters to local variables
-	local $line_err=$1          # Error message
-	local $fix_cmd=$2           # Fix command
+	# Assign function parameters to variables
+	$line_err=$1          # Error message
+	$fix_cmd=$2           # Fix command
 	echo -e -n "${RED}";	echo "    $line_err";  # Display error message in red
 	echo -e -n "${GREEN}";	echo "    $fix_cmd";   # Display fix command in green
 	echo -e -n "${NO_COLOR}"    # Reset color to no color
@@ -42,21 +43,21 @@ function __abf_git_ignore() {
 
 # Function to fix `crate version update` issue
 function __abf_fix_cargo_update_ver() {
-	echo "* CARGO UPDATE VER";
 	# cargo update -p solana-program@1.18.4 --precise ver
 	# where `ver` is the latest version of `solana-program` supporting rustc 1.68.0-dev
 	# 
-	local line_err="$(cat .abf_build.log | grep 'cargo update -p ')"   # Check for error related to cargo update
+	line_err="$(cat .abf_build.log | grep 'cargo update -p ')"   # Check for error related to cargo update
 	if [[ $line_err != "" ]];then   # If error is found
 		echo ""
 		echo "abf: try to fix crate version..."
 
-		local version_solana="$(solana --version | awk '{print $2}')" # (Get Solana version) extract string like '1.9.15'
-		local precise_version="--precise $version_solana"             # Define precise version for cargo update
-		local fix_cmd="${line_err/--precise ver/$precise_version}"    # Build command to fix issue
+		version_solana="$(solana --version | awk '{print $2}')" # (Get Solana version) extract string like '1.9.15'
+		precise_version="--precise $version_solana"             # Define precise version for cargo update
+		fix_cmd="${line_err/--precise ver/$precise_version}"    # Build command to fix issue
 																	  # (replace `ver` with current Solana version)
 
 		__abf_display_cmd $line_err $fix_cmd   # Display error and fix command
+		__abf_build_log;
 		return -1
 	fi;
 
@@ -66,83 +67,85 @@ function __abf_fix_cargo_update_ver() {
 
 # Function to fix `ahash library feature` issue
 function __abf_fix_ahash_issue() {
-	echo "* AHASH ISSUE";
 	# error[E0658]: use of unstable library feature 'build_hasher_simple_hash_one'
 	# cargo update -p ahash@0.8.11 --precise 0.8.6
 	#
-	local line_e0658="$(cat .abf_build.log | grep 'E0658' | head -n 1)"            # Check for error E0658
-	local line_hasher="$(echo $line_e0658 | grep 'build_hasher_simple_hash_one')"  # Check for use of unstable library feature
+	line_e0658="$(cat .abf_build.log | grep 'E0658' | head -n 1)"            # Check for error E0658
+	line_hasher="$(echo $line_e0658 | grep 'build_hasher_simple_hash_one')"  # Check for use of unstable library feature
 	if [[ $line_hasher != "" ]];then   # If error is found
 		echo ""
 		echo "abf: try to fix unstable 'ahash' library feature..."
-		local line_err=$line_hasher
+		line_err=$line_hasher
 
 		VERSION_AHASH_FIX="0.8.6"   # Define fixed version for ahash library
 
-		local line_err="error[E0658]: use of unstable library feature 'build_hasher_simple_hash_one'"
-		local get_ahash="$(cargo search ahash --limit 1 | grep 'ahash = \"')" # look for something like : 'ahash = "'.
-		local version_ahash="$(echo $get_ahash | awk -F'\"' '$0=$2')"         # Extract `ahash` version string between double quotes (")
-		local fix_cmd="cargo update -p ahash@$version_ahash --precise $VERSION_AHASH_FIX" # Build command to fix issue
+		line_err="error[E0658]: use of unstable library feature 'build_hasher_simple_hash_one'"
+		get_ahash="$(cargo search ahash --limit 1 | grep 'ahash = \"')" # look for something like : 'ahash = "'.
+		version_ahash="$(echo $get_ahash | awk -F'\"' '$0=$2')"         # Extract `ahash` version string between double quotes (")
+		fix_cmd="cargo update -p ahash@$version_ahash --precise $VERSION_AHASH_FIX" # Build command to fix issue
 
 		__abf_display_cmd $line_err $fix_cmd   # Display error and fix command
+		__abf_build_log;
 		return -1
 	fi;
 
 	return 0;
 }
 
-# Main function for abf_build
+
+# Build anchor project and try to fix current errors
 function abf_build() {
-	echo "* BUILD";
 	__abf_git_ignore;
-	local err=0;
-	anchor build &> .abf_build.log   # Build anchor and log output to `.abf_build.log` file
+	__abf_build_log;
+	err=0;
 
 	__abf_fix_cargo_update_ver
-	echo "* update ver: $?";
-	if [ "$?" != "0" ]; then
-		#--return $?
-		((err+=1));
+	if [ $? -ne 0 ]; then
+		err=$((err+=1));
 	fi;
 
 	__abf_fix_ahash_issue
-	echo "* ahash issue: $?";
-	if [ "$?" != "0" ]; then
-		#--return $?
-		((err+=1));
+	if [ $? -ne 0 ]; then
+		err=$((err+=1));
 	fi;
 
 	return $err;
 }
 
 
-# Function to loop until successful compilation
+# Build anchor project and log output to `.abf_build.log` file
+function __abf_build_log() {
+	anchor build &> .abf_build.log
+}
+
+
+# Function to loop until successful project compilation
 function __abf_build_loop() {
-	echo "* BUILD LOOP";
-	local r=-1
-	until [ $r -eq 0 ]; do
-		abf_build
-		echo "* loop: $?";
-		r=$?
+	local returned=-1;
+	local loop=0;
+	until [ $returned -eq 0 ]; do
+		abf_build;
+		loop=$((loop+=1));
+		returned=$?
 	done
 }
 
 
 # Main function for abf_init (abf init)
 function abf_init() {
-	local project_name=$1;
-	if [[ $project_name != "" ]];then
+	if [[ $1 != "" ]];then
 		__abf_versions
-		anchor init $project_name && cd $project_name
+		anchor init $1 && cd $1
 		__abf_build_loop
 		echo ""
 		tree --gitignore
 		echo ""
 		echo -e "👍 DONE"
 		echo ""
-	else
-		echo "abf: argument `project_name` is missing";
+		return 0;
 	fi;
+	echo "abf: argument `project_name` is missing";
+	return -1;
 }
 
 
@@ -155,9 +158,10 @@ function __abf_versions() {
 	__abf_version
 }
 
+
 function __abf_version() {
-	abf_version="v0.5.11 (2024-04-07)"
-	echo "abf $abf_version"
+	ABF_VERSION="v0.0.13 (2024-04-07)"
+	echo "abf $ABF_VERSION"
 	echo ""
 }
 
@@ -175,41 +179,44 @@ function __abf_help() {
 
 }
 
-function abf() {
-	local $command=$1;
 
-	if [[ $command == "" ]];then
+# Entry point of the tool
+function abf() {
+
+	if [[ $1 == "" ]];then
 		echo "abf: no command ?\n"
 		__abf_help
-		exit
+		return -1;
 	fi;
 
-	if [[ $command == "init" ]];then
+	if [[ $1 == "init" ]];then
 		abf_init $2 # $project_name
-		exit
+		return 0;
 	fi;
 
-	if [[ $command == "build" ]];then
+	if [[ $1 == "build" ]];then
 		abf_build
-		exit
+		return 0;
 	fi;
 
-	if [[ $command == "help" ]];then
+	if [[ $1 == "help" ]];then
 		__abf_help
-		exit
+		return 0;
 	fi;
 
-	if [[ $command == "version" ]];then
+	if [[ $1 == "version" ]];then
 		__abf_version
-		exit
+		return 0;
 	fi;
 
-	if [[ $command == "versions" ]];then
+	if [[ $1 == "versions" ]];then
 		__abf_versions
-		exit
+		return 0;
 	fi;
 
+	return 0;
 }
+
 
 # ABF: Anchor Build Fixer
 # -----------------------
