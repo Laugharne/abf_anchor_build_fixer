@@ -25,7 +25,7 @@
 
 The **first build** with Anchor can be challenging, especially for those who are not familiar with Rust compilations and Anchor environnement.
 
-This script (`"abf.sh"`) which overlays **Anchor** calls (*cli commands*), tries to automaticaly fix the build issues you are most likely to encounter as best as it can.
+This script (`"abf.sh"`) which overlays **Anchor** calls (*cli commands*), tries to dynamicaly fix the build issues you are most likely to encounter as best as it can.
 
 It defines several functions in **Bash** to handle building and fixing errors in an **Anchor project**. It includes color-coded output and error handling. Each function is documented with comments to explain its purpose and usage.
 
@@ -63,13 +63,13 @@ Go into your projects directory, then type `abf init <PROJECT_NAME>` to create p
 
 ### ✏️ Commands
 
-| Command    | Description             | Parameter              |
-| :--------- | :---------------------- | :--------------------- |
-| `init`     | Initializes a workspace | `<PROJECT_NAME>` *(1)* |
-| `build`    | Build a workspace       | none                   |
-| `version`  | Print 'abf' version     | none                   |
-| `versions` | Print assets versions   | none                   |
-| `help`     | Print help message      | none                   |
+| Command      | Description             | Parameter              |
+| :----------- | :---------------------- | :--------------------- |
+| `init`, `i`  | Initializes a workspace | `<PROJECT_NAME>` *(1)* |
+| `build`, `b` | Build a workspace       | none                   |
+| `version`    | Print 'abf' version     | none                   |
+| `versions`   | Print assets versions   | none                   |
+| `help`       | Print help message      | none                   |
 
 - *(1) : mandatory*
 
